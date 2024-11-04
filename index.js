@@ -9,7 +9,13 @@ const productRoutes = require("./routes/products");
 const app = express();
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  origin: ["http://localhost:3000", "https://elysique-dusky.vercel.app/"], // Add your frontend URLs
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Connect to MongoDB
