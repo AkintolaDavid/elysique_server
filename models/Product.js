@@ -5,14 +5,10 @@ const productSchema = new mongoose.Schema({
   price: Number,
   category: String,
   type: String,
-  mainImage: String,
-  additionalImages: [String],
+  images: [String],
   videoUrl: String,
   description: String,
-  sizeQuantities: {
-    type: Map,
-    of: Number,
-  },
+  sizeQuantities: Object,
 });
 
 module.exports = mongoose.model("Product", productSchema);

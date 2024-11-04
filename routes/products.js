@@ -7,9 +7,8 @@ const cloudinary = require("../config/cloudinary"); // Cloudinary configuration
 router.post(
   "/",
   upload.fields([
-    { name: "mainImage", maxCount: 1 },
-    { name: "additionalImages", maxCount: 5 },
-    { name: "videoUrl", maxCount: 1 },
+    { name: "images", maxCount: 5 }, // Upload field for images
+    { name: "video", maxCount: 1 }, // Upload field for video
   ]),
   async (req, res) => {
     try {
@@ -19,41 +18,21 @@ router.post(
       const { name, price, category, type, description, sizeQuantities } =
         req.body;
 
-      // Upload main image to Cloudinary if provided
-      let mainImageUrl = "";
-      if (
-        req.files &&
-        req.files["mainImage"] &&
-        req.files["mainImage"].length > 0
-      ) {
-        const uploadResult = await cloudinary.uploader.upload(
-          req.files["mainImage"][0].path
-        );
-        mainImageUrl = uploadResult.secure_url; // Get URL from Cloudinary
-      }
-
-      // Upload additional images to Cloudinary if provided
-      const additionalImages =
-        req.files && req.files["additionalImages"]
-          ? await Promise.all(
-              req.files["additionalImages"].map(async (file) => {
-                const uploadResult = await cloudinary.uploader.upload(
-                  file.path
-                );
-                return uploadResult.secure_url; // Get URL from Cloudinary
-              })
-            )
-          : [];
+      // Upload images to Cloudinary if provided
+      const images = req.files["images"]
+        ? await Promise.all(
+            req.files["images"].map(async (file) => {
+              const uploadResult = await cloudinary.uploader.upload(file.path);
+              return uploadResult.secure_url; // Get URL from Cloudinary
+            })
+          )
+        : [];
 
       // Upload video to Cloudinary if provided
       let videoUrl = "";
-      if (
-        req.files &&
-        req.files["videoUrl"] &&
-        req.files["videoUrl"].length > 0
-      ) {
+      if (req.files && req.files["video"] && req.files["video"].length > 0) {
         const uploadResult = await cloudinary.uploader.upload(
-          req.files["videoUrl"][0].path,
+          req.files["video"][0].path,
           {
             resource_type: "video",
           }
@@ -67,8 +46,7 @@ router.post(
         price,
         category,
         type,
-        mainImage: mainImageUrl,
-        additionalImages,
+        images, // Updated to use images array
         videoUrl,
         description,
         sizeQuantities: sizeQuantities ? JSON.parse(sizeQuantities) : {},
