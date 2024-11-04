@@ -7,7 +7,7 @@ const cloudinary = require("../config/cloudinary"); // Import the Cloudinary con
 router.post(
   "/",
   upload.fields([
-    { name: "mainImage", maxCount: 1 },
+    { name: "image", maxCount: 1 }, // Change here
     { name: "additionalImages", maxCount: 5 },
     { name: "videoUrl", maxCount: 1 },
   ]),
@@ -19,13 +19,14 @@ router.post(
       const { name, price, category, type, description, sizeQuantities } =
         req.body;
 
-      // Initialize variables for image paths
-      let mainImage = "";
-      if (req.files["mainImage"] && req.files["mainImage"].length > 0) {
+      // Initialize variable for image paths
+      let image = "";
+      if (req.files["image"] && req.files["image"].length > 0) {
+        // Change here
         const uploadResult = await cloudinary.uploader.upload(
-          req.files["mainImage"][0].path
+          req.files["image"][0].path
         );
-        mainImage = uploadResult.secure_url; // Get URL from Cloudinary
+        image = uploadResult.secure_url; // Get URL from Cloudinary
       }
 
       const additionalImages = req.files["additionalImages"]
@@ -50,7 +51,7 @@ router.post(
         price,
         category,
         type,
-        mainImage,
+        image, // Change here
         additionalImages,
         videoUrl,
         description,
@@ -65,6 +66,7 @@ router.post(
     }
   }
 );
+
 router.get("/", async (req, res) => {
   const { category, type } = req.query;
   const query = {};
