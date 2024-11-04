@@ -31,13 +31,25 @@ router.post("/", imageUpload, videoUpload, (req, res) => {
     res.status(201).json(product);
   });
 });
+router.get("/", async (req, res) => {
+  const { category, type } = req.query;
 
-// Route to get all products
-router.get("/", (req, res) => {
-  db.products.find((err, products) => {
-    if (err) return res.status(500).json({ error: "Error fetching products." });
-    res.status(200).json(products);
-  });
+  // Build a query object based on filters
+  const query = {};
+  if (category) query.category = category;
+  if (type) query.type = type;
+
+  try {
+    // Query products from MongoDB
+    db.products.find(query, (err, products) => {
+      if (err) {
+        return res.status(500).json({ error: "Error fetching products" });
+      }
+      res.status(200).json(products);
+    });
+  } catch (error) {
+    res.status(500).json({ error: "An error occurred" });
+  }
 });
 
 // Route to delete a product by ID
