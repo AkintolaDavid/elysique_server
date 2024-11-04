@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const Product = require("../models/Product"); // Your Product model
-const upload = require("./upload");
-const cloudinary = require("../config/cloudinary"); // Import the Cloudinary configuration
+const upload = require("./upload"); // Multer upload middleware
+const cloudinary = require("../config/cloudinary"); // Cloudinary configuration
 
 router.post(
   "/",
   upload.fields([
-    { name: "image", maxCount: 1 }, // Change here
+    { name: "mainImage", maxCount: 1 },
     { name: "additionalImages", maxCount: 5 },
     { name: "videoUrl", maxCount: 1 },
   ]),
@@ -19,16 +19,16 @@ router.post(
       const { name, price, category, type, description, sizeQuantities } =
         req.body;
 
-      // Initialize variable for image paths
-      let image = "";
-      if (req.files["image"] && req.files["image"].length > 0) {
-        // Change here
+      // Upload main image to Cloudinary if provided
+      let mainImageUrl = "";
+      if (req.files["mainImage"] && req.files["mainImage"].length > 0) {
         const uploadResult = await cloudinary.uploader.upload(
-          req.files["image"][0].path
+          req.files["mainImage"][0].path
         );
-        image = uploadResult.secure_url; // Get URL from Cloudinary
+        mainImageUrl = uploadResult.secure_url; // Get URL from Cloudinary
       }
 
+      // Upload additional images to Cloudinary if provided
       const additionalImages = req.files["additionalImages"]
         ? await Promise.all(
             req.files["additionalImages"].map(async (file) => {
@@ -38,20 +38,25 @@ router.post(
           )
         : [];
 
+      // Upload video to Cloudinary if provided
       let videoUrl = "";
       if (req.files["videoUrl"] && req.files["videoUrl"].length > 0) {
         const uploadResult = await cloudinary.uploader.upload(
-          req.files["videoUrl"][0].path
+          req.files["videoUrl"][0].path,
+          {
+            resource_type: "video",
+          }
         );
         videoUrl = uploadResult.secure_url; // Get URL from Cloudinary
       }
 
+      // Create a new Product instance and save to MongoDB
       const newProduct = new Product({
         name,
         price,
         category,
         type,
-        image, // Change here
+        mainImage: mainImageUrl,
         additionalImages,
         videoUrl,
         description,
