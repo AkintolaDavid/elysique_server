@@ -10,7 +10,11 @@ const app = express();
 
 // Middleware
 const corsOptions = {
-  origin: ["http://localhost:3000", "https://elysique-dusky.vercel.app/"], // Add your frontend URLs
+  origin: [
+    "http://localhost:3000",
+    "https://elysique-dusky.vercel.app",
+    "https://elysique-on22.vercel.app",
+  ], // Add your frontend URLs
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 };
