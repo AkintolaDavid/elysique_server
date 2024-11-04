@@ -8,7 +8,6 @@ const productRoutes = require("./routes/products");
 
 const app = express();
 
-const cors = require("cors");
 app.use(cors({ origin: "http://localhost:3000" })); // or '*' for any origin (not recommended for production)
 
 app.use(express.json());
