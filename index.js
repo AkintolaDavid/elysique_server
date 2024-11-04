@@ -8,8 +8,39 @@ const productRoutes = require("./routes/products");
 
 const app = express();
 
-app.use(cors({ origin: "http://localhost:3000" })); // or '*' for any origin (not recommended for production)
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    "http://localhost:3000",
+    "https://elysique-ttfa.vercel.app",
+  ];
 
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    // Allow the specific origin making the request
+    res.setHeader("Access-Control-Allow-Origin", origin);
+
+    // Specify allowed methods
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+
+    // Specify allowed headers (those sent by the client in the request)
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    );
+
+    // Allow credentials like cookies or authorization headers to be sent
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  }
+
+  // Handle preflight requests (OPTIONS method)
+  if (req.method === "OPTIONS") {
+    // Preflight response, with 200 OK to allow the actual request
+    return res.status(200).end();
+  }
+
+  // Proceed to the next middleware or route handler
+  next();
+});
 app.use(express.json());
 
 // Connect to MongoDB
