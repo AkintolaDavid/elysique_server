@@ -1,24 +1,20 @@
 const multer = require("multer");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const cloudinary = require("../config/cloudinary");
+const path = require("path");
 
-const imageStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: "products",
-    resource_type: "image",
+// Set storage for files
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads"); // Specify the upload folder
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname)); // Append timestamp to file name
   },
 });
 
-const videoStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: "products",
-    resource_type: "video",
-  },
-});
+// Initialize upload
+const upload = multer({ storage });
 
-const imageUpload = multer({ storage: imageStorage });
-const videoUpload = multer({ storage: videoStorage });
-
-module.exports = { imageUpload, videoUpload };
+module.exports = {
+  imageUpload: upload.array("images"), // Multiple files
+  videoUpload: upload.single("video"), // Single file
+};
