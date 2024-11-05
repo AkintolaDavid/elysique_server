@@ -1,5 +1,5 @@
 const mongojs = require("mongojs");
 
-const db = mongojs("elysique", ["products"]);
+const db = mongojs("elysiqueDB", ["products"]);
 
 module.exports = db;
