@@ -1,22 +1,19 @@
 const { Pool } = require("pg");
-require("dotenv").config();
-const pgUri = process.env.POSTGRES_URI;
 
 const pool = new Pool({
-  connectionString: pgUri,
+  connectionString: process.env.POSTGRES_URI,
+  connectionTimeoutMillis: 5000, // 5 seconds timeout
+  idleTimeoutMillis: 30000, // 30 seconds before an idle client is closed
+  max: 20, // Maximum number of connections in the pool
 });
 
-// Example usage of the pool to query the database
-pool.connect((err, client, release) => {
-  if (err) {
-    return console.error("Error acquiring client", err.stack);
-  }
-  client.query("SELECT NOW()", (err, result) => {
-    release();
-    if (err) {
-      return console.error("Error executing query", err.stack);
-    }
-    console.log(result.rows);
+// Attempt a connection and log any errors
+pool
+  .connect()
+  .then((client) => {
+    console.log("Connected to PostgreSQL successfully.");
+    client.release();
+  })
+  .catch((err) => {
+    console.error("Error connecting to PostgreSQL:", err);
   });
-});
-module.exports = pool;

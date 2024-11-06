@@ -2,7 +2,8 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-const { Pool } = require("pg");
+const mongoose = require("mongoose");
+const User = require("./models/User");
 const productRoutes = require("./routes/products");
 const nodemailer = require("nodemailer");
 
@@ -34,28 +35,27 @@ app.use((req, res, next) => {
 });
 app.use(express.json());
 
-// Connect to PostgreSQL
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
-});
-
-pool
-  .connect()
-  .then(() => console.log("Connected to PostgreSQL"))
-  .catch((error) => console.error("PostgreSQL connection error:", error));
-
-// Make PostgreSQL pool available in routes
-app.use((req, res, next) => {
-  req.pool = pool;
-  next();
-});
+// Connect to MongoDB using Mongoose
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("Error connecting to MongoDB:", err));
 
 // Routes
 app.use("/api/products", productRoutes);
+app.get("/api/users", async (req, res) => {
+  console.log("Received request for users");
+  try {
+    const users = await User.find(); // Assuming you have a User model
+    res.json(users); // Send users as response
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ message: "Error fetching users" });
+  }
+});
 
 // Nodemailer configuration for contact form
 const transporter = nodemailer.createTransport({
