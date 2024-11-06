@@ -13,7 +13,7 @@ const app = express();
 app.use((req, res, next) => {
   const allowedOrigins = [
     "http://localhost:3000",
-    "https://elysique-ttfa.vercel.app",
+    "https://elysique.vercel.app",
   ];
 
   const origin = req.headers.origin;
