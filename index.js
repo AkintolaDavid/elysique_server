@@ -14,6 +14,7 @@ app.use((req, res, next) => {
   const allowedOrigins = [
     "http://localhost:3000",
     "https://elysique.vercel.app",
+    "https://elysique.onrender.com",
   ];
 
   const origin = req.headers.origin;
