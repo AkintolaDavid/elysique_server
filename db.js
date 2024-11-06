@@ -1,18 +1,22 @@
-// db.js
 const { Pool } = require("pg");
 require("dotenv").config();
+const pgUri = process.env.POSTGRES_URI;
 
 const pool = new Pool({
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME,
-  ssl: process.env.NODE_ENV === "production", // Enables SSL in production
+  connectionString: pgUri,
 });
 
-pool.on("connect", () => {
-  console.log("Connected to the PostgreSQL database");
+// Example usage of the pool to query the database
+pool.connect((err, client, release) => {
+  if (err) {
+    return console.error("Error acquiring client", err.stack);
+  }
+  client.query("SELECT NOW()", (err, result) => {
+    release();
+    if (err) {
+      return console.error("Error executing query", err.stack);
+    }
+    console.log(result.rows);
+  });
 });
-
 module.exports = pool;
