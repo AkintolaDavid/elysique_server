@@ -1,64 +1,63 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../config/mongoConfig");
-const { imageUpload, videoUpload } = require("../middleware/multerConfig");
+const db = require("../db");
 
-// Route to add new product
-router.post("/", imageUpload, videoUpload, (req, res) => {
-  // Check for uploaded files
-  if (!req.files || !req.files.length) {
-    return res.status(400).json({ error: "No files were uploaded." });
-  }
-
-  const { name, price, category, type, description, sizeQuantities } = req.body;
-
-  const imageUrls = req.files?.map((file) => file.path);
-  const videoUrl = req.file ? req.file.path : ""; // Use req.file for the video upload
-
-  const newProduct = {
+// Create a new product
+router.post("/", async (req, res) => {
+  const {
     name,
     price,
     category,
     type,
     description,
-    images: imageUrls,
+    images,
     videoUrl,
-    sizeQuantities: JSON.parse(sizeQuantities),
-  };
-
-  db.products.insert(newProduct, (err, product) => {
-    if (err) return res.status(500).json({ error: "Error saving product." });
-    res.status(201).json(product);
-  });
-});
-router.get("/", async (req, res) => {
-  const { category, type } = req.query;
-
-  // Build a query object based on filters
-  const query = {};
-  if (category) query.category = category;
-  if (type) query.type = type;
+    sizeQuantities,
+  } = req.body;
 
   try {
-    // Query products from MongoDB
-    db.products.find(query, (err, products) => {
-      if (err) {
-        return res.status(500).json({ error: "Error fetching products" });
-      }
-      res.status(200).json(products);
-    });
+    const result = await db.query(
+      `INSERT INTO products (name, price, category, type, description, images, video_url, size_quantities)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [
+        name,
+        price,
+        category,
+        type,
+        description,
+        images,
+        videoUrl,
+        sizeQuantities,
+      ]
+    );
+    res.status(201).json(result.rows[0]);
   } catch (error) {
-    res.status(500).json({ error: "An error occurred" });
+    console.error("Error saving product:", error);
+    res.status(500).json({ error: "Error saving product." });
   }
 });
 
-// Route to delete a product by ID
-router.delete("/:id", (req, res) => {
+// Get all products
+router.get("/", async (req, res) => {
+  try {
+    const result = await db.query("SELECT * FROM products");
+    res.status(200).json({ products: result.rows });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// Delete a product by ID
+router.delete("/:id", async (req, res) => {
   const { id } = req.params;
-  db.products.remove({ _id: mongojs.ObjectId(id) }, (err, result) => {
-    if (err) return res.status(500).json({ error: "Error deleting product." });
+  try {
+    await db.query("DELETE FROM products WHERE id = $1", [id]);
     res.status(200).json({ message: "Product deleted successfully!" });
-  });
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    res.status(500).json({ error: "Error deleting product." });
+  }
 });
 
 module.exports = router;
