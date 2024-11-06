@@ -38,11 +38,16 @@ router.post("/", async (req, res) => {
 // Get all products
 router.get("/", async (req, res) => {
   try {
-    const products = await Product.find();
-    res.status(200).json({ products });
+    const { category, type } = req.query;
+
+    const query = {};
+    if (category) query.category = category;
+    if (type && type !== "All") query.type = type;
+
+    const products = await Product.find(query);
+    res.json({ products });
   } catch (error) {
-    console.error("Error fetching products:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ error: "Error fetching products." });
   }
 });
 
