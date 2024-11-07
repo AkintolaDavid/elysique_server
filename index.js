@@ -58,6 +58,36 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
+app.post("/api/verify-payment", async (req, res) => {
+  const { reference } = req.body;
+  if (!reference) {
+    return res
+      .status(400)
+      .json({ message: "Transaction reference is missing" });
+  }
+  console.log(process.env.PAYSTACK_SECRET_KEY);
+  try {
+    const response = await axios.get(
+      `https://api.paystack.co/transaction/verify/${reference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET}`, // Use your Paystack secret key here
+        },
+      }
+    );
+
+    const { data } = response;
+
+    if (data.status === true && data.data.status === "success") {
+      return res.json({ status: "success", data: data.data });
+    } else {
+      return res.json({ status: "failure", message: "Payment not successful" });
+    }
+  } catch (error) {
+    console.error("Error verifying payment:", error);
+    return res.status(500).json({ message: "Error verifying payment" });
+  }
+});
 // Nodemailer configuration for contact form
 const transporter = nodemailer.createTransport({
   service: "Gmail",
