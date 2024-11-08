@@ -57,7 +57,22 @@ app.get("/api/users", async (req, res) => {
     res.status(500).json({ message: "Error fetching users" });
   }
 });
+app.get("/api/search", async (req, res) => {
+  const { query } = req.query;
 
+  try {
+    // Find products that match the search query in their name or description
+    const products = await Product.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { description: { $regex: query, $options: "i" } },
+      ],
+    });
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: "Error searching products", error });
+  }
+});
 app.post("/api/verify-payment", async (req, res) => {
   const { reference } = req.body;
   if (!reference) {
