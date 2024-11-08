@@ -33,31 +33,28 @@ const verifyToken = (req, res, next) => {
     next();
   });
 };
-// Configure CORS middleware
-app.use((req, res, next) => {
-  const allowedOrigins = [
-    "http://localhost:3000",
-    "https://elysique.vercel.app",
-    "https://elysique.onrender.com",
-  ];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://elysique.vercel.app",
+  "https://elysique.onrender.com",
+];
 
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-    res.setHeader(
-      "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-    );
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-  }
+// CORS configuration
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (allowedOrigins.includes(origin) || !origin) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: "GET,POST,PUT,DELETE",
+    allowedHeaders: "Origin,X-Requested-With,Content-Type,Accept,Authorization",
+    credentials: true,
+  })
+);
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
-  next();
-});
 app.use(express.json());
 
 // Connect to MongoDB using Mongoose
