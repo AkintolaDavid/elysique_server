@@ -9,6 +9,7 @@ const productRoutes = require("./routes/products");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const app = express();
+const bcrypt = require("bcrypt");
 const verifyToken = (req, res, next) => {
   const token = req.headers["authorization"];
 
