@@ -7,9 +7,32 @@ const User = require("./models/User");
 const Product = require("./models/Product");
 const productRoutes = require("./routes/products");
 const nodemailer = require("nodemailer");
-
+const jwt = require("jsonwebtoken");
 const app = express();
+const verifyToken = (req, res, next) => {
+  const token = req.headers["authorization"];
 
+  console.log("Token received:", token);
+
+  if (!token) {
+    return res
+      .status(403)
+      .json({ message: "Please log in before submitting the form!" });
+  }
+
+  jwt.verify(token.split(" ")[1], process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      console.log("Token verification failed:", err);
+      return res
+        .status(401)
+        .json({ message: "Invalid token! Please log in again." });
+    }
+
+    req.userId = decoded.id; // Change to 'id' since the token contains 'id' not 'userId'
+    console.log("Token verified. User ID:", decoded.id);
+    next();
+  });
+};
 // Configure CORS middleware
 app.use((req, res, next) => {
   const allowedOrigins = [
@@ -56,6 +79,102 @@ app.get("/api/users", async (req, res) => {
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({ message: "Error fetching users" });
+  }
+});
+app.post("/api/signup", async (req, res) => {
+  const { email, phone, password, fullName } = req.body;
+
+  console.log("Received signup request with fullName:", fullName);
+
+  try {
+    // Check if the password is less than 6 characters
+    if (password.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters long" });
+    }
+
+    const existingUser = await User.findOne({ $or: [{ phone }, { email }] });
+    console.log("User found:", existingUser);
+
+    if (existingUser) {
+      if (existingUser.phone === phone) {
+        return res
+          .status(400)
+          .json({ message: "Phone number is already registered" });
+      }
+      if (existingUser.email === email) {
+        return res.status(400).json({ message: "Email is already registered" });
+      }
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = new User({
+      email,
+      phone,
+      password: hashedPassword,
+      fullName,
+    });
+
+    await newUser.save();
+
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "24h",
+    });
+
+    console.log(
+      "User registered successfully with fullName:",
+      newUser.fullName
+    );
+
+    res.status(201).json({
+      message: "User registered successfully",
+      token,
+      user: {
+        id: newUser._id,
+        email: newUser.email,
+        phone: newUser.phone,
+        fullName: newUser.fullName,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+app.post("/api/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const existingUser = await User.findOne({ email });
+
+    if (!existingUser) {
+      // Specify message for non-existent user
+      return res.status(400).json({ message: "Email not registered" });
+    }
+
+    const isMatch = await bcrypt.compare(password, existingUser.password);
+    if (!isMatch) {
+      // Specify message for incorrect password
+      return res.status(400).json({ message: "Invalid password" });
+    }
+
+    console.log("Login successful for user:", existingUser.email);
+    const token = jwt.sign({ id: existingUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "24h",
+    });
+    console.log(token);
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      fullName: existingUser.fullName,
+      email: existingUser.email, // Add this line to send the email
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
   }
 });
 app.get("/api/search", async (req, res) => {
@@ -144,7 +263,151 @@ app.post("/api/contact", async (req, res) => {
     return res.status(500).send("Error sending contact message.");
   }
 });
+app.post("/api/forgotpassword", async (req, res) => {
+  const { email } = req.body;
 
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(404).send("User not found");
+  }
+
+  // Generate JWT token
+  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    expiresIn: "15m", // Token expires in 15
+  });
+
+  // Set the reset token and its expiration in the user document
+  user.resetToken = token;
+  user.resetTokenExpiration = Date.now() + 900000; // 15 minutes
+
+  // Save the updated user with the token and expiration
+  await user.save();
+
+  // URL for resetting password, sent to the user's email
+  const resetUrl = `https://elysique.vercel.app/reset-password/${token}`;
+
+  // Send reset password email with nodemailer
+  try {
+    await transporter.sendMail({
+      to: email,
+      subject: "ALLURE Password Reset",
+      html: `
+      <div
+      style="
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        background-color: #f1f2f4;
+      "
+    >
+      <table
+        width="100%"
+        cellpadding="0"
+        cellspacing="0"
+        border="0"
+        style="max-width: 600px; margin: 0 auto; background-color: #fff; text-align: center; border-collapse: collapse;"
+      >
+        <tr>
+          <td
+            style="
+              background-color: #252526;
+              color: white;
+              padding: 20px;
+              font-size: 23px;
+              font-weight: 600;
+              border-top-left-radius: 12px;
+              border-top-right-radius: 12px;
+            "
+          >
+          Reset ALLURE password
+          </td>
+        </tr>
+        <tr>
+          <td
+            style="
+              padding: 20px;
+              font-size: 25px;
+              font-weight: 700;
+              color: black;
+              text-align: center;
+            "
+          >
+          You have requested for password reset. Please click the link below to change your password. 
+          </td>
+        </tr>
+      
+        <tr>
+          <td style="padding: 10px 20px; font-size: 14px; font-weight: 700; color: black; text-align: center;">
+          <a
+          href="${resetUrl}"
+          style="
+            color: red;
+            text-decoration: underline;
+            font-size: 21px;
+            font-weight: bold;
+            
+          "
+        >
+          Change Password
+        </a> </tr>
+    
+        
+        <tr>
+          <td style="padding: 10px 20px; font-size: 14px; color: #777; text-align: center;">
+            This email was generated automatically. Please do not reply directly.
+          </td>
+        </tr>
+      </table>
+    </div>
+    
+
+    
+      `,
+    });
+    res.send("Password reset email sent");
+  } catch (err) {
+    console.error("Error sending email:", err);
+    res.status(500).send("Error sending reset email");
+  }
+});
+
+// Reset password route
+app.post("/api/reset-password/:token", async (req, res) => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
+  // Check if the password has at least 6 characters
+  if (!newPassword || newPassword.length < 6) {
+    return res.status(400).send("Password must be at least 6 characters long");
+  }
+
+  let userId;
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    userId = decoded.userId;
+  } catch (err) {
+    return res.status(400).send("Invalid or expired token");
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(400).send("Invalid or expired token");
+  }
+
+  if (user.resetTokenExpiration < Date.now()) {
+    return res.status(400).send("Invalid or expired token");
+  }
+
+  user.password = await bcrypt.hash(newPassword, 10);
+  user.resetToken = undefined; // Clear the reset token
+  user.resetTokenExpiration = undefined; // Clear the expiration date
+  await user.save();
+
+  res.send("Password has been reset");
+});
 // Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
