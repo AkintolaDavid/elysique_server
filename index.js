@@ -4,6 +4,7 @@ const cors = require("cors");
 require("dotenv").config();
 const mongoose = require("mongoose");
 const User = require("./models/User");
+const Product = require("./models/Product");
 const productRoutes = require("./routes/products");
 const nodemailer = require("nodemailer");
 
