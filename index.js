@@ -81,11 +81,8 @@ app.get("/api/users", async (req, res) => {
 });
 app.post("/api/signup", async (req, res) => {
   const { email, phone, password, fullName } = req.body;
-
-  console.log("Received signup request with fullName:", fullName);
-
   try {
-    // Check if the password is less than 6 characters
+    // Validation for password length
     if (password.length < 6) {
       return res
         .status(400)
@@ -93,8 +90,6 @@ app.post("/api/signup", async (req, res) => {
     }
 
     const existingUser = await User.findOne({ $or: [{ phone }, { email }] });
-    console.log("User found:", existingUser);
-
     if (existingUser) {
       if (existingUser.phone === phone) {
         return res
@@ -106,13 +101,11 @@ app.post("/api/signup", async (req, res) => {
       }
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
+    // Remove manual hashing and let the pre-save hook hash the password
     const newUser = new User({
       email,
       phone,
-      password: hashedPassword,
+      password,
       fullName,
     });
 
@@ -121,11 +114,6 @@ app.post("/api/signup", async (req, res) => {
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: "24h",
     });
-
-    console.log(
-      "User registered successfully with fullName:",
-      newUser.fullName
-    );
 
     res.status(201).json({
       message: "User registered successfully",
@@ -149,32 +137,30 @@ app.post("/api/login", async (req, res) => {
     const existingUser = await User.findOne({ email });
 
     if (!existingUser) {
-      // Specify message for non-existent user
       return res.status(400).json({ message: "Email not registered" });
     }
 
+    // Use bcrypt.compare with await to avoid Promise issues
     const isMatch = await bcrypt.compare(password, existingUser.password);
     if (!isMatch) {
-      // Specify message for incorrect password
       return res.status(400).json({ message: "Invalid password" });
     }
 
-    console.log("Login successful for user:", existingUser.email);
     const token = jwt.sign({ id: existingUser._id }, process.env.JWT_SECRET, {
       expiresIn: "24h",
     });
-    console.log(token);
     return res.status(200).json({
       message: "Login successful",
       token,
       fullName: existingUser.fullName,
-      email: existingUser.email, // Add this line to send the email
+      email: existingUser.email,
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
   }
 });
+
 app.get("/api/search", async (req, res) => {
   const { query } = req.query;
 
