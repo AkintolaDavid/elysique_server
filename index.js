@@ -229,17 +229,52 @@ app.post("/api/contact", async (req, res) => {
       to: process.env.EMAIL_USER,
       subject: "Elysique New Contact Form Submission",
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f1f2f4;">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fff; text-align: center; border-collapse: collapse;">
-            <tr><td style="background-color: #252526; color: white; padding: 20px; font-size: 23px; font-weight: 600; border-top-left-radius: 12px; border-top-right-radius: 12px;">ALLURE Contact Form Submission</td></tr>
-            <tr><td style="padding: 20px; font-size: 32px; font-weight: 700; color: black; text-align: left;">You have received a new message from:</td></tr>
-            <tr><td style="padding: 10px 20px; font-size: 22px; font-weight: 700; color: black; text-align: left;">Name: ${name}</td></tr>
-            <tr><td style="padding: 10px 20px; font-size: 22px; font-weight: 700; color: black; text-align: left;">Email: <a href="mailto:${email}" style="color: #4caf50;">${email}</a></td></tr>
-            <tr><td style="padding: 10px 20px; font-size: 22px; font-weight: 700; color: black; text-align: left;">Message:</td></tr>
-            <tr><td style="padding: 10px 20px; background-color: #f9f9f9; font-size: 22px; color: black; text-align: left;">${message}</td></tr>
-            <tr><td style="padding: 10px 20px; font-size: 14px; color: #777; text-align: left;">This email was generated automatically. Please do not reply directly.</td></tr>
-          </table>
-        </div>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f1f2f4;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fff; text-align: center; border-collapse: collapse; border-radius: 10px; overflow: hidden;">
+        
+        <!-- Header Section -->
+        <tr>
+          <td style="background-color: #252526; color: white; padding: 20px; font-size: 23px; font-weight: 600;">
+            ELYSIQUE Contact Form Submission
+          </td>
+        </tr>
+        
+        <!-- Body Section -->
+        <tr>
+          <td style="padding: 20px; font-size: 24px; font-weight: 700; color: #333; text-align: left;">
+            You have received a new message from:
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 20px; font-size: 18px; font-weight: 600; color: #333; text-align: left;">
+            Name: <span style="font-weight: 400;">${name}</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 20px; font-size: 18px; font-weight: 600; color: #333; text-align: left;">
+            Email: <a href="mailto:${email}" style="color: #4caf50; text-decoration: none; font-weight: 400;">${email}</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 20px; font-size: 18px; font-weight: 600; color: #333; text-align: left;">
+            Message:
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 15px 20px; background-color: #f9f9f9; font-size: 16px; color: #333; text-align: left; line-height: 1.6;">
+            ${message}
+          </td>
+        </tr>
+        
+        <!-- Footer Section -->
+        <tr>
+          <td style="padding: 15px 20px; font-size: 14px; color: #777; text-align: left; border-top: 1px solid #ddd;">
+            This email was generated automatically. Please do not reply directly.
+          </td>
+        </tr>
+      </table>
+    </div>
+    
       `,
     });
     res.status(200).send({ message: "Contact message sent successfully!" });
@@ -269,7 +304,7 @@ app.post("/api/forgotpassword", async (req, res) => {
   await user.save();
 
   // URL for resetting password, sent to the user's email
-  const resetUrl = `https://elysique.vercel.app/reset-password/${token}`;
+  const resetUrl = `https://allure-ruddy.vercel.app/reset-password/${token}`;
 
   // Send reset password email with nodemailer
   try {
@@ -293,8 +328,17 @@ app.post("/api/forgotpassword", async (req, res) => {
         cellpadding="0"
         cellspacing="0"
         border="0"
-        style="max-width: 600px; margin: 0 auto; background-color: #fff; text-align: center; border-collapse: collapse;"
+        style="
+          max-width: 600px;
+          margin: 0 auto;
+          background-color: #fff;
+          text-align: center;
+          border-collapse: collapse;
+          border-radius: 10px;
+          overflow: hidden;
+        "
       >
+        <!-- Header Section -->
         <tr>
           <td
             style="
@@ -303,50 +347,57 @@ app.post("/api/forgotpassword", async (req, res) => {
               padding: 20px;
               font-size: 23px;
               font-weight: 600;
-              border-top-left-radius: 12px;
-              border-top-right-radius: 12px;
             "
           >
-          Reset ALLURE password
+            Reset ELYSIQUE Password
           </td>
         </tr>
+    
+        <!-- Body Section -->
         <tr>
           <td
             style="
               padding: 20px;
-              font-size: 25px;
-              font-weight: 700;
-              color: black;
-              text-align: center;
+              font-size: 20px;
+              font-weight: 600;
+              color: #333;
+              text-align: left;
             "
           >
-          You have requested for password reset. Please click the link below to change your password. 
+            You have requested a password reset. Please click the link below to change your password.
           </td>
         </tr>
-      
-        <tr>
-          <td style="padding: 10px 20px; font-size: 14px; font-weight: 700; color: black; text-align: center;">
-          <a
-          href="${resetUrl}"
-          style="
-            color: red;
-            text-decoration: underline;
-            font-size: 21px;
-            font-weight: bold;
-            
-          "
-        >
-          Change Password
-        </a> </tr>
     
-        
+        <!-- Reset Button Section -->
         <tr>
-          <td style="padding: 10px 20px; font-size: 14px; color: #777; text-align: center;">
+          <td style="padding: 20px; text-align: center;">
+            <a
+              href="${resetUrl}"
+              style="
+                display: inline-block;
+                background-color: #ff4d4d;
+                color: white;
+                padding: 15px 25px;
+                text-decoration: none;
+                font-size: 18px;
+                font-weight: bold;
+                border-radius: 5px;
+              "
+            >
+              Change Password
+            </a>
+          </td>
+        </tr>
+    
+        <!-- Footer Section -->
+        <tr>
+          <td style="padding: 15px 20px; font-size: 14px; color: #777; text-align: center; border-top: 1px solid #ddd;">
             This email was generated automatically. Please do not reply directly.
           </td>
         </tr>
       </table>
     </div>
+    
     
 
     
