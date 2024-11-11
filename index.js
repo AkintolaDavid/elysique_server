@@ -304,7 +304,7 @@ app.post("/api/forgotpassword", async (req, res) => {
   await user.save();
 
   // URL for resetting password, sent to the user's email
-  const resetUrl = `https://elysique.vercel.app//reset-password/${token}`;
+  const resetUrl = `https://elysique.vercel.app/reset-password/${token}`;
 
   // Send reset password email with nodemailer
   try {
@@ -437,7 +437,6 @@ app.post("/api/reset-password/:token", async (req, res) => {
     return res.status(400).send("Invalid or expired token");
   }
 
-  user.password = await bcrypt.hash(newPassword, 10);
   user.resetToken = undefined; // Clear the reset token
   user.resetTokenExpiration = undefined; // Clear the expiration date
   await user.save();
