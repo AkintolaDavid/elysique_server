@@ -304,7 +304,7 @@ app.post("/api/forgotpassword", async (req, res) => {
   await user.save();
 
   // URL for resetting password, sent to the user's email
-  const resetUrl = `https://allure-ruddy.vercel.app/reset-password/${token}`;
+  const resetUrl = `https://elysique.vercel.app//reset-password/${token}`;
 
   // Send reset password email with nodemailer
   try {
@@ -364,7 +364,7 @@ app.post("/api/forgotpassword", async (req, res) => {
               text-align: left;
             "
           >
-            You have requested a password reset. Please click the link below to change your password.
+            You have requested a password reset. Please click the button below to change your password.
           </td>
         </tr>
     
