@@ -5,6 +5,7 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const User = require("./models/User");
 const Product = require("./models/Product");
+const Otp = require("./models/Otp");
 const productRoutes = require("./routes/products");
 const axios = require("axios");
 const nodemailer = require("nodemailer");
@@ -440,7 +441,242 @@ app.post("/api/reset-password/:token", async (req, res) => {
   await user.save();
 
   res.send("Password has been reset");
-  s;
 });
+
+const orderSchema = new mongoose.Schema({
+  customerName: { type: String, required: true },
+  customerEmail: { type: String, required: true },
+  house_address: { type: String, required: true },
+  city: { type: String, required: true },
+  state: { type: String, required: true },
+  country: { type: String, required: true },
+  products: [
+    {
+      productId: String,
+      name: String,
+      price: Number,
+      quantity: Number,
+      size: String,
+      imageUrl: [String], // Include image URL
+    },
+  ],
+  totalAmount: { type: Number, required: true },
+  orderDate: { type: Date, default: Date.now },
+});
+
+// Create the model for orders
+const Order = mongoose.model("Order", orderSchema);
+app.post("/api/orders", async (req, res) => {
+  try {
+    console.log(req.body); // Log the request body to check incoming data
+    const {
+      customerName,
+      customerEmail,
+      house_address,
+      city,
+      state,
+      country,
+      products,
+      totalAmount,
+    } = req.body;
+
+    const newOrder = new Order({
+      customerName,
+      customerEmail,
+      house_address,
+      city,
+      state,
+      country,
+      products,
+      totalAmount,
+      orderDate: new Date(),
+    });
+    await newOrder.save();
+    res
+      .status(201)
+      .json({ message: "Order placed successfully", order: newOrder });
+  } catch (error) {
+    console.error("Error placing order:", error); // Log the error for better context
+    res.status(500).json({ message: "Failed to place order", error });
+  }
+});
+app.get("/api/getorders", async (req, res) => {
+  try {
+    let query = {};
+
+    const orders = await Order.find(query);
+
+    res.status(200).json({ orders });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+const sendOtpToEmail = async (email, otp) => {
+  const transporter = nodemailer.createTransport({
+    service: "gmail", // Use your email provider's SMTP service
+    auth: {
+      user: process.env.EMAIL_USER, // Your email address
+      pass: process.env.EMAIL_PASS, // Your email password or app password
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "ELYSIQUE OTP Code",
+    html: `
+      <div
+      style="
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        background-color: #f1f2f4;
+      "
+    >
+      <table
+        width="100%"
+        cellpadding="0"
+        cellspacing="0"
+        border="0"
+        style="max-width: 600px; margin: 0 auto; background-color: #fff; text-align: center; border-collapse: collapse;"
+      >
+        <tr>
+          <td
+            style="
+              background-color: #252526;
+              color: white;
+              padding: 20px;
+              font-size: 23px;
+              font-weight: 600;
+              border-top-left-radius: 12px;
+              border-top-right-radius: 12px;
+            "
+          >
+          ALLURE OTP Code
+          </td>
+        </tr>
+        <tr>
+          <td
+            style="
+              padding: 20px;
+              font-size: 32px;
+              font-weight: 700;
+              color: black;
+              text-align: center;
+            "
+          >
+          Here's your one-time code for ALLURE
+          </td>
+        </tr>
+      
+        <tr>
+          <td style="padding: 10px 20px; font-size: 14px; font-weight: 700; color: black; text-align: center;">
+          Use this passcode to verify the email address of Admin. It will expire in 10 minutes.   </td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 20px; font-size: 22px; font-weight: 700; color: black; text-align: center;">
+          ${otp}
+          </td>
+        </tr>
+        
+        <tr>
+          <td style="padding: 10px 20px; font-size: 14px; color: #777; text-align: center;">
+            This email was generated automatically. Please do not reply directly.
+          </td>
+        </tr>
+      </table>
+    </div>
+    
+
+    
+      `,
+  };
+
+  // Send email
+  await transporter.sendMail(mailOptions);
+};
+app.post("/api/send-otp", async (req, res) => {
+  const { email } = req.body;
+  // const adminEmail = "nkemdilimoganah@gmail.com";
+  const adminEmail = "akintoladavid66@gmail.com";
+
+  // Log emails for debugging
+  console.log("Received email:", email);
+  console.log("Admin email from environment:", adminEmail);
+
+  // Check if the email matches the admin email in the environment variable
+  if (email !== process.env.ADMINEMAIL) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Please enter admin email" });
+  }
+
+  const otp = Math.floor(1000 + Math.random() * 9000);
+  const expiresAt = new Date(Date.now() + 20 * 60 * 1000); // OTP expires in 10 minutes
+
+  // Save the OTP and expiration time in the database
+  const otpEntry = new Otp({ email, otp, expiresAt });
+  await otpEntry.save();
+
+  try {
+    // Send the OTP to the email
+    await sendOtpToEmail(email, otp);
+    return res
+      .status(200)
+      .json({ success: true, message: "OTP sent successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: "Error sending OTP" });
+  }
+});
+app.post("/api/verify-otp", async (req, res) => {
+  const { otp } = req.body;
+  try {
+    const otpRecord = await Otp.findOne({ otp });
+    if (!otpRecord) {
+      return res.status(400).json({ success: false, message: "Invalid OTP" });
+    }
+
+    const now = new Date();
+    if (otpRecord.expiresAt < now) {
+      return res
+        .status(400)
+        .json({ success: false, message: "OTP has expired" });
+    }
+
+    const token = jwt.sign(
+      { role: "admin", email: otpRecord.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "20m" }
+    );
+
+    // Try to delete OTP and catch any errors related to deletion
+    try {
+      await Otp.deleteOne({ _id: otpRecord._id });
+    } catch (deleteError) {
+      console.error("Error deleting OTP:", deleteError.message);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to delete OTP after verification",
+      });
+    }
+
+    // Return the token upon successful OTP verification
+    return res.json({
+      success: true,
+      token,
+      message: "OTP verified successfully",
+    });
+  } catch (error) {
+    console.error("Error verifying OTP:", error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
