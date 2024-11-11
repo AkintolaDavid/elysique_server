@@ -410,12 +410,11 @@ app.post("/api/forgotpassword", async (req, res) => {
   }
 });
 
-// Reset password route
 app.post("/api/reset-password/:token", async (req, res) => {
   const { token } = req.params;
   const { newPassword } = req.body;
 
-  // Check if the password has at least 6 characters
+  // Validate new password length
   if (!newPassword || newPassword.length < 6) {
     return res.status(400).send("Password must be at least 6 characters long");
   }
@@ -429,20 +428,23 @@ app.post("/api/reset-password/:token", async (req, res) => {
   }
 
   const user = await User.findById(userId);
-  if (!user) {
+  if (!user || user.resetTokenExpiration < Date.now()) {
     return res.status(400).send("Invalid or expired token");
   }
 
-  if (user.resetTokenExpiration < Date.now()) {
-    return res.status(400).send("Invalid or expired token");
+  try {
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword; // Set the new hashed password
+
+    // Clear the reset token and expiration
+    user.resetToken = undefined;
+    user.resetTokenExpiration = undefined;
+
+    // Save updated user
+    await user.save();
+    res.send("Password has been reset");
+  } catch (err) {
+    res.status(500).send("An error occurred while resetting the password");
   }
-
-  user.resetToken = undefined; // Clear the reset token
-  user.resetTokenExpiration = undefined; // Clear the expiration date
-  await user.save();
-
-  res.send("Password has been reset");
 });
-// Start the server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
