@@ -101,12 +101,14 @@ app.post("/api/signup", async (req, res) => {
         return res.status(400).json({ message: "Email is already registered" });
       }
     }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     // Remove manual hashing and let the pre-save hook hash the password
     const newUser = new User({
       email,
       phone,
-      password,
+      password: hashedPassword,
       fullName,
     });
 
@@ -432,21 +434,13 @@ app.post("/api/reset-password/:token", async (req, res) => {
     return res.status(400).send("Invalid or expired token");
   }
 
-  try {
-    // Hash the new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword; // Set the new hashed password
+  user.password = await bcrypt.hash(newPassword, 10);
+  user.resetToken = undefined; // Clear the reset token
+  user.resetTokenExpiration = undefined; // Clear the expiration date
+  await user.save();
 
-    // Clear the reset token and expiration
-    user.resetToken = undefined;
-    user.resetTokenExpiration = undefined;
-
-    // Save updated user
-    await user.save();
-    res.send("Password has been reset");
-  } catch (err) {
-    res.status(500).send("An error occurred while resetting the password");
-  }
+  res.send("Password has been reset");
+  s;
 });
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
