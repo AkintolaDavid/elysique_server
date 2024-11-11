@@ -210,7 +210,7 @@ app.post("/api/verify-payment", async (req, res) => {
 });
 // Nodemailer configuration for contact form
 const transporter = nodemailer.createTransport({
-  service: "Gmail",
+  service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -227,7 +227,7 @@ app.post("/api/contact", async (req, res) => {
   try {
     await transporter.sendMail({
       to: process.env.EMAIL_USER,
-      subject: "Allure New Contact Form Submission",
+      subject: "Elysique New Contact Form Submission",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f1f2f4;">
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fff; text-align: center; border-collapse: collapse;">
