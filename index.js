@@ -474,6 +474,8 @@ app.post("/api/orders", async (req, res) => {
       country,
       products,
       totalAmount,
+      orderDate,
+      urgentDelivery,
     } = req.body;
 
     const newOrder = new Order({
@@ -485,8 +487,10 @@ app.post("/api/orders", async (req, res) => {
       country,
       products,
       totalAmount,
-      orderDate: new Date(),
+      orderDate,
+      urgentDelivery,
     });
+
     await newOrder.save();
     res
       .status(201)
@@ -552,7 +556,7 @@ const sendOtpToEmail = async (email, otp) => {
               border-top-right-radius: 12px;
             "
           >
-          ALLURE OTP Code
+          ELYSIQUE OTP Code
           </td>
         </tr>
         <tr>
@@ -627,6 +631,54 @@ app.post("/api/send-otp", async (req, res) => {
   } catch (error) {
     return res.status(500).json({ message: "Error sending OTP" });
   }
+});
+app.post("/api/sendUrgentDeliveryEmail", (req, res) => {
+  const orderData = req.body.orderData;
+
+  // Set up the transporter using your email provider's SMTP
+  const transporter = nodemailer.createTransport({
+    service: "gmail", // You can use another email provider
+    auth: {
+      user: process.env.ADMIN_EMAIL, // The admin email address
+      pass: process.env.ADMIN_EMAIL_PASSWORD, // Email password or app-specific password
+    },
+  });
+
+  // Create the email content
+  const mailOptions = {
+    from: process.env.ADMIN_EMAIL, // The sender's email
+    to: process.env.ADMIN_EMAIL, // Admin's email
+    subject: "Urgent Delivery Request",
+    text: `An order has been placed with urgent delivery:
+
+      Order Date: ${orderData.orderDate}
+      Total Amount: ₦${orderData.totalAmount.toFixed(2)}
+      
+      Products:
+      ${orderData.products
+        .map((product) => `${product.name} (x${product.quantity})`)
+        .join("\n")}
+
+      Customer Details:
+      Name: ${orderData.customerName}
+      Address: ${orderData.house_address}, ${orderData.city}, ${
+      orderData.state
+    }, ${orderData.country}
+
+      Urgent Delivery: Yes
+
+      Please review the order and process it accordingly.`,
+  };
+
+  // Send email
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error("Error sending email:", error);
+      return res.status(500).send("Error sending email.");
+    }
+    console.log("Email sent: " + info.response);
+    res.status(200).send("Email sent successfully.");
+  });
 });
 app.post("/api/verify-otp", async (req, res) => {
   const { otp } = req.body;
