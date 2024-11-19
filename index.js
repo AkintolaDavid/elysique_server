@@ -459,12 +459,12 @@ const orderSchema = new mongoose.Schema({
   totalAmount: { type: Number, required: true },
   orderDate: { type: Date, default: Date.now },
 });
-
-// Create the model for orders
 const Order = mongoose.model("Order", orderSchema);
+
 app.post("/api/orders", async (req, res) => {
   try {
     console.log(req.body); // Log the request body to check incoming data
+
     const {
       customerName,
       customerEmail,
@@ -474,10 +474,19 @@ app.post("/api/orders", async (req, res) => {
       country,
       products,
       totalAmount,
-      orderDate,
+      orderDate, // This is coming as a string from the frontend
       urgentDelivery,
     } = req.body;
 
+    // Convert orderDate to a Date object
+    const parsedOrderDate = new Date(orderDate);
+
+    // Validate that the parsed date is valid
+    if (isNaN(parsedOrderDate.getTime())) {
+      return res.status(400).json({ message: "Invalid order date format." });
+    }
+
+    // Create a new order with the parsed date
     const newOrder = new Order({
       customerName,
       customerEmail,
@@ -487,7 +496,7 @@ app.post("/api/orders", async (req, res) => {
       country,
       products,
       totalAmount,
-      orderDate,
+      orderDate: parsedOrderDate, // Use the converted Date object
       urgentDelivery,
     });
 
@@ -500,6 +509,7 @@ app.post("/api/orders", async (req, res) => {
     res.status(500).json({ message: "Failed to place order", error });
   }
 });
+
 app.get("/api/getorders", async (req, res) => {
   try {
     let query = {};
@@ -647,7 +657,7 @@ app.post("/api/sendUrgentDeliveryEmail", (req, res) => {
   // Create the email content
   const mailOptions = {
     from: process.env.ADMIN_EMAIL, // The sender's email
-    to: process.env.ADMIN_EMAIL, // Admin's email
+    to: "akintoladavid66@gmail.com", // Admin's email
     subject: "Urgent Delivery Request",
     text: `An order has been placed with urgent delivery:
 
