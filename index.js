@@ -461,6 +461,8 @@ const orderSchema = new mongoose.Schema({
 });
 const Order = mongoose.model("Order", orderSchema);
 
+const Order = mongoose.model("Order", orderSchema);
+
 app.post("/api/orders", async (req, res) => {
   try {
     console.log(req.body); // Log the request body to check incoming data
