@@ -639,14 +639,14 @@ app.post("/api/sendUrgentDeliveryEmail", (req, res) => {
   const transporter = nodemailer.createTransport({
     service: "gmail", // You can use another email provider
     auth: {
-      user: process.env.ADMIN_EMAIL, // The admin email address
-      pass: process.env.ADMIN_EMAIL_PASSWORD, // Email password or app-specific password
+      user: process.env.EMAIL_USER, // Your email address
+      pass: process.env.EMAIL_PASS, // Your email password or app password
     },
   });
 
   // Create the email content
   const mailOptions = {
-    from: process.env.ADMIN_EMAIL, // The sender's email
+    from: process.env.EMAIL_USER, // The sender's email
     to: "akintoladavid66@gmail.com", // Admin's email
     subject: "Urgent Delivery Request",
     text: `An order has been placed with urgent delivery:
