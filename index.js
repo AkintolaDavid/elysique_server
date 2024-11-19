@@ -461,6 +461,8 @@ const orderSchema = new mongoose.Schema({
 });
 const Order = mongoose.model("Order", orderSchema);
 
+const Order = mongoose.model("Order", orderSchema);
+
 app.post("/api/orders", async (req, res) => {
   try {
     console.log(req.body); // Log the request body to check incoming data
@@ -474,19 +476,10 @@ app.post("/api/orders", async (req, res) => {
       country,
       products,
       totalAmount,
-      orderDate, // This is coming as a string from the frontend
       urgentDelivery,
     } = req.body;
 
-    // Convert orderDate to a Date object
-    const parsedOrderDate = new Date(orderDate);
-
-    // Validate that the parsed date is valid
-    if (isNaN(parsedOrderDate.getTime())) {
-      return res.status(400).json({ message: "Invalid order date format." });
-    }
-
-    // Create a new order with the parsed date
+    // Create a new order (orderDate is set automatically by the schema)
     const newOrder = new Order({
       customerName,
       customerEmail,
@@ -496,7 +489,6 @@ app.post("/api/orders", async (req, res) => {
       country,
       products,
       totalAmount,
-      orderDate: parsedOrderDate, // Use the converted Date object
       urgentDelivery,
     });
 
