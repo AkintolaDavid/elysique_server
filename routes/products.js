@@ -51,7 +51,7 @@ router.get("/", async (req, res) => {
   }
 });
 // Product search route (you can add this to your routes for searching products by number)
-uter.get("/:productNumber", async (req, res) => {
+router.get("/:productNumber", async (req, res) => {
   try {
     const product = await Product.findOne({
       productNumber: req.params.productNumber,
