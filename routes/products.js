@@ -66,17 +66,6 @@ router.get("/:productNumber", async (req, res) => {
     res.status(500).json({ message: "Server error." });
   }
 });
-router.get("/:number", async (req, res) => {
-  const { number } = req.params;
-  try {
-    const product = await Product.find({
-      number: { $regex: new RegExp(`^${number}`), $options: "i" }, // Partial match
-    });
-    res.status(200).json(product);
-  } catch (err) {
-    res.status(500).json({ message: "Error fetching product", error: err });
-  }
-});
 
 router.get("/:productId", async (req, res) => {
   const { productId } = req.params;
