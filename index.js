@@ -309,7 +309,7 @@ app.post("/api/forgotpassword", async (req, res) => {
   try {
     await transporter.sendMail({
       to: email,
-      subject: "ALLURE Password Reset",
+      subject: "ELYSIQUE Password Reset",
       html: `
       <div
       style="
@@ -468,10 +468,12 @@ app.post("/api/orders", async (req, res) => {
     const {
       customerName,
       customerEmail,
+      phoneNumber,
       house_address,
       city,
       state,
       country,
+      // Extract phone number
       products,
       totalAmount,
       urgentDelivery,
@@ -481,10 +483,12 @@ app.post("/api/orders", async (req, res) => {
     const newOrder = new Order({
       customerName,
       customerEmail,
+      phoneNumber,
       house_address,
       city,
       state,
       country,
+      // Extract phone number
       products,
       totalAmount,
       urgentDelivery,
@@ -569,7 +573,7 @@ const sendOtpToEmail = async (email, otp) => {
               text-align: center;
             "
           >
-          Here's your one-time code for ALLURE
+          Here's your one-time code for ELYSIQUE
           </td>
         </tr>
       
