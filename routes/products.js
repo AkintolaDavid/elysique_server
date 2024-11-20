@@ -52,18 +52,16 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: "Error fetching products." });
   }
 });
-// Product search route (you can add this to your routes for searching products by number)
-router.get("/:productNumber", async (req, res) => {
+
+router.get("/:number", async (req, res) => {
+  const { number } = req.params;
   try {
-    const product = await Product.findOne({
-      productNumber: req.params.productNumber,
+    const product = await Product.find({
+      number: { $regex: new RegExp(`^${number}`), $options: "i" }, // Partial match
     });
-    if (!product) {
-      return res.status(404).json({ message: "Product not found." });
-    }
-    res.json(product);
-  } catch (error) {
-    res.status(500).json({ message: "Server error." });
+    res.status(200).json(product);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching product", error: err });
   }
 });
 
