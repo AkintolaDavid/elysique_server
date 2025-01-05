@@ -194,7 +194,7 @@ app.post("/api/verify-payment", async (req, res) => {
         },
       }
     );
-
+    console.log(response);
     const { data } = response;
 
     if (data.status === true && data.data.status === "success") {
