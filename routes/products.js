@@ -52,23 +52,46 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: "Error fetching products." });
   }
 });
+
+router.post("/update-quantity", async (req, res) => {
+  const { productId, size, quantity } = req.body;
+
+  try {
+    let update;
+
+    if (size) {
+      // Update size-specific quantity
+      update = { [`sizeQuantities.${size}`]: { $gte: quantity } };
+      await Product.findOneAndUpdate(
+        { _id: productId, [`sizeQuantities.${size}`]: { $gte: quantity } },
+        { $inc: { [`sizeQuantities.${size}`]: -quantity } }
+      );
+    } else {
+      // Update general quantity
+      update = { quantity: { $gte: quantity } };
+      await Product.findOneAndUpdate(
+        { _id: productId, quantity: { $gte: quantity } },
+        { $inc: { quantity: -quantity } }
+      );
+    }
+
+    res.status(200).json({ success: true, message: "Quantity updated." });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+});
+
 // Product search route (you can add this to your routes for searching products by number)
 router.get("/:productNumber", async (req, res) => {
   try {
-    const { productNumber } = req.params;
-
-    // Use regex to allow partial matching
-    const products = await Product.find({
-      productNumber: { $regex: productNumber, $options: "i" },
+    const product = await Product.findOne({
+      productNumber: req.params.productNumber,
     });
-
-    if (!products.length) {
-      return res.status(404).json({ message: "No products found." });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found." });
     }
-
-    res.json(products); // Return an array of matching products
+    res.json(product);
   } catch (error) {
-    console.error("Error fetching products:", error);
     res.status(500).json({ message: "Server error." });
   }
 });
