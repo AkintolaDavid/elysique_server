@@ -84,7 +84,6 @@ router.post("/api/update-quantity", async (req, res) => {
 // Product search route (you can add this to your routes for searching products by number)
 router.get("/:productNumber", async (req, res) => {
   try {
-    console.log("Received productNumber:", req.params.productNumber);
     const product = await Product.findOne({
       productNumber: req.params.productNumber,
     });

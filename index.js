@@ -126,7 +126,6 @@ app.post("/api/signup", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -156,7 +155,6 @@ app.post("/api/login", async (req, res) => {
       email: existingUser.email,
     });
   } catch (error) {
-    console.error(error);
     return res.status(500).json({ message: "Server error" });
   }
 });
@@ -184,7 +182,6 @@ app.post("/api/verify-payment", async (req, res) => {
       .status(400)
       .json({ message: "Transaction reference is missing" });
   }
-  console.log(process.env.PAYSTACK_SECRET_KEY);
   try {
     const response = await axios.get(
       `https://api.paystack.co/transaction/verify/${reference}`,
@@ -194,7 +191,6 @@ app.post("/api/verify-payment", async (req, res) => {
         },
       }
     );
-    console.log(response);
     const { data } = response;
 
     if (data.status === true && data.data.status === "success") {
@@ -505,7 +501,29 @@ app.post("/api/orders", async (req, res) => {
     res.status(500).json({ message: "Failed to place order", error });
   }
 });
+app.get("/api/getorders", async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
 
+    // Fetch orders with pagination
+    const orders = await Order.find({})
+      .skip((page - 1) * limit)
+      .limit(Number(limit));
+
+    // Get total number of orders
+    const totalOrders = await Order.countDocuments();
+
+    res.status(200).json({
+      orders,
+      totalOrders,
+      totalPages: Math.ceil(totalOrders / limit),
+      currentPage: Number(page),
+    });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
 const sendOtpToEmail = async (email, otp) => {
   const transporter = nodemailer.createTransport({
     service: "gmail", // Use your email provider's SMTP service
@@ -597,10 +615,6 @@ app.post("/api/send-otp", async (req, res) => {
   const { email } = req.body;
   // const adminEmail = "nkemdilimoganah@gmail.com";
   const adminEmail = "akintoladavid66@gmail.com";
-
-  // Log emails for debugging
-  console.log("Received email:", email);
-  console.log("Admin email from environment:", adminEmail);
 
   // Check if the email matches the admin email in the environment variable
   if (email !== process.env.ADMINEMAIL) {
