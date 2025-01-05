@@ -53,7 +53,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/update-quantity", async (req, res) => {
+router.post("/updatequantity", async (req, res) => {
   const { productId, size, quantity } = req.body;
 
   try {
