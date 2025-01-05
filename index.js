@@ -506,8 +506,6 @@ app.post("/api/orders", async (req, res) => {
   }
 });
 
-c;
-
 const sendOtpToEmail = async (email, otp) => {
   const transporter = nodemailer.createTransport({
     service: "gmail", // Use your email provider's SMTP service
