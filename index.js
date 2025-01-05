@@ -506,27 +506,7 @@ app.post("/api/orders", async (req, res) => {
   }
 });
 
-app.get("/api/getorders", async (req, res) => {
-  try {
-    const { page = 1, limit = 10 } = req.query;
-
-    const orders = await Order.find({})
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
-
-    const totalOrders = await Order.countDocuments();
-
-    res.status(200).json({
-      orders,
-      totalOrders,
-      totalPages: Math.ceil(totalOrders / limit),
-      currentPage: Number(page),
-    });
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-});
+c;
 
 const sendOtpToEmail = async (email, otp) => {
   const transporter = nodemailer.createTransport({
