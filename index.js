@@ -4,7 +4,7 @@ const cors = require("cors");
 require("dotenv").config();
 const mongoose = require("mongoose");
 const User = require("./models/User");
-const Product = require("./models/Product");
+const Product = require("./routes/Product");
 const Otp = require("./models/Otp");
 const productRoutes = require("./routes/products");
 const axios = require("axios");
@@ -509,7 +509,8 @@ app.get("/api/getorders", async (req, res) => {
     const orders = await Order.find({})
       .skip((page - 1) * limit)
       .limit(Number(limit));
-
+    const products = await Order.find();
+    console.log(products);
     // Get total number of orders
     const totalOrders = await Order.countDocuments();
 
