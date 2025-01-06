@@ -12,8 +12,15 @@ const productSchema = new mongoose.Schema({
   description: { type: String, required: true },
   images: { type: [String], required: true },
   videoUrl: { type: String },
-  sizeQuantities: { type: Map, of: Number }, // e.g., { S: 10, M: 5, L: 2 }
-  quantity: { type: Number, default: 0 }, // New field for products without sizes
+  quantity: {
+    type: Number,
+    default: 0, // For products that don't have sizes
+  },
+  sizeQuantities: {
+    type: Map,
+    of: Number, // For size-specific products (e.g. S, M, L, etc.)
+    default: {},
+  },
 });
 
 module.exports = mongoose.model("Product", productSchema);

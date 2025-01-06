@@ -58,6 +58,7 @@ router.post("/updatequantity", async (req, res) => {
     // Find the product by ID
     const product = await Product.findById(productId);
     console.log(product);
+    console.log(productId);
     if (!product) {
       return res
         .status(404)
