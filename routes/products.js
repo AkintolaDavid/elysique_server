@@ -13,6 +13,7 @@ router.post("/", async (req, res) => {
     description,
     images,
     videoUrl,
+    quantity,
     sizeQuantities,
   } = req.body;
 
@@ -26,6 +27,7 @@ router.post("/", async (req, res) => {
       description,
       images,
       videoUrl,
+      quantity,
       sizeQuantities,
     });
 
