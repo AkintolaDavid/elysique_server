@@ -57,14 +57,14 @@ router.post("/updatequantity", async (req, res) => {
   try {
     // Find the product by ID
     const product = await Product.findById(productId);
-
+    console.log(product);
     if (!product) {
       return res
         .status(404)
         .json({ success: false, message: "Product not found" });
     }
 
-    // If the product has sizes (sizeQuantities), handle size-specific update
+    // If the product has sizeQuantities (size-specific quantities), handle that
     if (product.sizeQuantities && size) {
       const currentSizeQuantity = product.sizeQuantities.get(size) || 0;
       if (currentSizeQuantity < quantity) {
@@ -75,7 +75,7 @@ router.post("/updatequantity", async (req, res) => {
       }
       product.sizeQuantities.set(size, currentSizeQuantity - quantity);
     }
-    // If there is no sizeQuantities (general product), handle general quantity update
+    // If there is no sizeQuantities (general quantity), handle general quantity update
     else if (product.quantity !== undefined) {
       if (product.quantity < quantity) {
         return res.status(400).json({
