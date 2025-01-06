@@ -52,22 +52,20 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: "Error fetching products." });
   }
 });
-
 router.post("/updatequantity", async (req, res) => {
   const { productId, size, quantity } = req.body;
-  console.log(productId);
   try {
     // Find the product by ID
     const product = await Product.findById(productId);
-    console.log(product);
+
     if (!product) {
       return res
         .status(404)
         .json({ success: false, message: "Product not found" });
     }
 
-    if (size && product.sizeQuantities) {
-      // Handle size-specific quantity updates
+    // If the product has sizes (sizeQuantities), handle size-specific update
+    if (product.sizeQuantities && size) {
       const currentSizeQuantity = product.sizeQuantities.get(size) || 0;
       if (currentSizeQuantity < quantity) {
         return res.status(400).json({
@@ -76,16 +74,18 @@ router.post("/updatequantity", async (req, res) => {
         });
       }
       product.sizeQuantities.set(size, currentSizeQuantity - quantity);
-    } else if (product.quantity !== undefined) {
-      // Handle non-size-specific quantity updates
+    }
+    // If there is no sizeQuantities (general product), handle general quantity update
+    else if (product.quantity !== undefined) {
       if (product.quantity < quantity) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Insufficient quantity in stock" });
+        return res.status(400).json({
+          success: false,
+          message: "Insufficient quantity in stock",
+        });
       }
       product.quantity -= quantity;
     } else {
-      // Handle case where neither size-specific nor general quantity exists
+      // If no quantity is available at all
       return res.status(400).json({
         success: false,
         message: "Product does not have a valid stock quantity",
