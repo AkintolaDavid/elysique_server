@@ -57,27 +57,41 @@ router.post("/updatequantity", async (req, res) => {
   const { productId, size, quantity } = req.body;
 
   try {
-    let update;
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+    }
 
     if (size) {
       // Update size-specific quantity
-      update = { [`sizeQuantities.${size}`]: { $gte: quantity } };
-      await Product.findOneAndUpdate(
-        { _id: productId, [`sizeQuantities.${size}`]: { $gte: quantity } },
-        { $inc: { [`sizeQuantities.${size}`]: -quantity } }
-      );
+      const currentSizeQuantity = product.sizeQuantities.get(size) || 0;
+      if (currentSizeQuantity < quantity) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Insufficient quantity in stock" });
+      }
+      product.sizeQuantities.set(size, currentSizeQuantity - quantity);
     } else {
-      // Update general quantity
-      update = { quantity: { $gte: quantity } };
-      await Product.findOneAndUpdate(
-        { _id: productId, quantity: { $gte: quantity } },
-        { $inc: { quantity: -quantity } }
-      );
+      // Update general quantity for non-size products
+      if (product.quantity < quantity) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Insufficient quantity in stock" });
+      }
+      product.quantity -= quantity;
     }
 
-    res.status(200).json({ success: true, message: "Quantity updated." });
-  } catch (err) {
-    res.status(400).json({ success: false, message: err.message });
+    await product.save();
+    res.json({
+      success: true,
+      message: "Product quantity updated successfully",
+    });
+  } catch (error) {
+    console.error("Error updating product quantity:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
 

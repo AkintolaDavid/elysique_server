@@ -670,7 +670,7 @@ app.post("/api/verify-otp", async (req, res) => {
     const token = jwt.sign(
       { role: "admin", email: otpRecord.email },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "4h" }
     );
 
     // Try to delete OTP and catch any errors related to deletion
