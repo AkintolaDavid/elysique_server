@@ -488,7 +488,8 @@ app.get("/api/getorders", async (req, res) => {
 
     // Calculate skip value
     const skip = (pageNumber - 1) * limitNumber;
-
+    const orderss = await Order.find();
+    console.log(orderss);
     // Fetch paginated orders
     const orders = await Order.find()
       .skip(skip) // Skip the previous pages
