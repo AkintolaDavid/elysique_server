@@ -55,11 +55,11 @@ router.get("/", async (req, res) => {
 
 router.post("/updatequantity", async (req, res) => {
   const { productId, size, quantity } = req.body;
-
+  console.log(productId);
   try {
     // Find the product by ID
     const product = await Product.findById(productId);
-
+    console.log(product);
     if (!product) {
       return res
         .status(404)
