@@ -59,6 +59,7 @@ router.put("/updatequantity/:id", async (req, res) => {
     const { size, quantity } = req.body; // size and quantity are expected from the request body
 
     // Find the product by ID
+    console.log("Product ID:", req.params.id);
     const product = await Product.findById(req.params.id);
 
     if (!product) {
