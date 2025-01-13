@@ -54,12 +54,14 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: "Error fetching products." });
   }
 });
-router.put("/updatequantity/:id", async (req, res) => {
+router.put("/updatequantity/:productId", async (req, res) => {
   try {
     const { size, quantity } = req.body; // size and quantity are expected from the request body
 
     // Find the product by ID
-    console.log("Product ID:", req.params.id);
+    console.log("Product ID:", req.params._id);
+    console.log("Product ID:", req.params.productId);
+    console.log("Product ID:");
     const product = await Product.findById(req.params.id);
 
     if (!product) {
