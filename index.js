@@ -480,11 +480,25 @@ app.post("/api/orders", async (req, res) => {
 });
 app.get("/api/getorders", async (req, res) => {
   try {
-    const orders = await Order.find(); // Fetch all orders
-    res.status(200).json(orders); // Return the data
+    const { page = 1, limit = 10 } = req.query; // Extract page and limit from query parameters
+    const skip = (page - 1) * limit; // Calculate the number of documents to skip
+
+    // Fetch orders with pagination
+    const orders = await Order.find().skip(skip).limit(Number(limit));
+    const totalOrders = await Order.countDocuments(); // Get total number of orders
+
+    res.status(200).json({
+      success: true,
+      orders,
+      totalOrders,
+    });
   } catch (error) {
     console.error("Error fetching orders:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
   }
 });
 
