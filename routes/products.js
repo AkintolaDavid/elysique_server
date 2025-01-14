@@ -55,48 +55,43 @@ router.get("/", async (req, res) => {
   }
 });
 router.put("/updatequantity/:productId", async (req, res) => {
-  try {
-    const { size, quantity } = req.body; // size and quantity are expected from the request body
+  const { productId } = req.params;
+  const { size, quantity } = req.body;
 
-    // Find the product by ID
-    console.log("Product ID:", req.params._id);
-    console.log("Product ID:", req.params.productId);
-    console.log("Product ID:");
-    const product = await Product.findById(req.params.id);
+  try {
+    const product = await Product.findById(productId);
 
     if (!product) {
-      return res.status(404).send({ message: "Product not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
     }
 
-    // Handle product with sizes (if applicable)
-    if (product.sizeQuantities && size) {
-      // Ensure enough stock is available for the selected size
-      if (product.sizeQuantities[size] >= quantity) {
-        product.sizeQuantities[size] -= quantity; // Decrease stock for the selected size
+    if (size) {
+      // Update size-specific quantity
+      if (product.sizeQuantities.has(size)) {
+        product.sizeQuantities.set(
+          size,
+          product.sizeQuantities.get(size) + quantity
+        );
       } else {
-        return res
-          .status(400)
-          .send({ message: "Not enough stock for the selected size" });
+        product.sizeQuantities.set(size, quantity);
       }
     } else {
-      // Handle products without size options
-      if (product.quantity >= quantity) {
-        product.quantity -= quantity; // Decrease the total stock quantity
-      } else {
-        return res
-          .status(400)
-          .send({ message: "Not enough stock for this product" });
-      }
+      // Update general quantity
+      product.quantity += quantity;
     }
 
-    // Save the updated product details
     await product.save();
 
-    // Send success response
-    res.status(200).send({ message: "Quantity updated successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Product quantity updated", product });
   } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: "Error updating product quantity" });
+    console.error("Error updating quantity:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Internal server error", error });
   }
 });
 
