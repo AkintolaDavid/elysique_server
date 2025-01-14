@@ -71,16 +71,32 @@ router.put("/updatequantity/:productId", async (req, res) => {
     if (size) {
       // Update size-specific quantity
       if (product.sizeQuantities.has(size)) {
-        product.sizeQuantities.set(
-          size,
-          product.sizeQuantities.get(size) + quantity
-        );
+        const currentQuantity = product.sizeQuantities.get(size);
+
+        if (currentQuantity < quantity) {
+          return res.status(400).json({
+            success: false,
+            message: "Insufficient stock for the selected size.",
+          });
+        }
+
+        product.sizeQuantities.set(size, currentQuantity - quantity);
       } else {
-        product.sizeQuantities.set(size, quantity);
+        return res.status(400).json({
+          success: false,
+          message: "Invalid size or size not available.",
+        });
       }
     } else {
       // Update general quantity
-      product.quantity += quantity;
+      if (product.quantity < quantity) {
+        return res.status(400).json({
+          success: false,
+          message: "Insufficient stock.",
+        });
+      }
+
+      product.quantity -= quantity;
     }
 
     await product.save();
