@@ -55,6 +55,7 @@ router.get("/", async (req, res) => {
   }
 });
 router.put("/updatequantity/:productId", async (req, res) => {
+  console.log(req.params.productId);
   const { productId } = req.params;
   const { size, quantity } = req.body;
 
