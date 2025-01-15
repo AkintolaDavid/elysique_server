@@ -13,9 +13,11 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const app = express();
 const bcrypt = require("bcrypt");
+const verifyAdminToken = require("./middleware/verifyAdminToken ");
+const verifyUserToken = require("./middleware/verifyUserToken");
 const verifyToken = (req, res, next) => {
   const token = req.headers["authorization"];
-
+  const verifyAdminToken = require("./middleware/verifyAdminToken ");
   console.log("Token received:", token);
 
   if (!token) {
@@ -72,7 +74,7 @@ mongoose
 
 // Routes
 app.use("/api/products", productRoutes);
-app.get("/api/users", async (req, res) => {
+app.get("/api/users", verifyAdminToken, async (req, res) => {
   console.log("Received request for users");
   try {
     const users = await User.find(); // Assuming you have a User model
@@ -146,9 +148,13 @@ app.post("/api/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid password" });
     }
 
-    const token = jwt.sign({ id: existingUser._id }, process.env.JWT_SECRET, {
-      expiresIn: "24h",
-    });
+    const token = jwt.sign(
+      { id: existingUser._id, role: "user" },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "24h",
+      }
+    );
     return res.status(200).json({
       message: "Login successful",
       token,
@@ -436,7 +442,7 @@ app.post("/api/reset-password/:token", async (req, res) => {
   res.send("Password has been reset");
 });
 
-app.post("/api/orders", async (req, res) => {
+app.post("/api/orders", verifyUserToken, async (req, res) => {
   try {
     console.log(req.body); // Log the request body to check incoming data
 
@@ -478,7 +484,7 @@ app.post("/api/orders", async (req, res) => {
     res.status(500).json({ message: "Failed to place order", error });
   }
 });
-app.get("/api/getorders", async (req, res) => {
+app.get("/api/getorders", verifyAdminToken, async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query; // Extract page and limit from query parameters
     const skip = (page - 1) * limit; // Calculate the number of documents to skip

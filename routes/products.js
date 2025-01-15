@@ -1,9 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const Product = require("../models/Product");
+const verifyAdminToken = require("../middleware/verifyAdminToken ");
+const verifyUserToken = require("../middleware/verifyUserToken");
 
 // Create a new product
-router.post("/", async (req, res) => {
+router.post("/", verifyAdminToken, async (req, res) => {
   const {
     name,
     price,
@@ -54,7 +56,7 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: "Error fetching products." });
   }
 });
-router.put("/updatequantity/:productId", async (req, res) => {
+router.put("/updatequantity/:productId", verifyUserToken, async (req, res) => {
   console.log(req.params.productId);
   const { productId } = req.params;
   const { size, quantity } = req.body;
@@ -144,7 +146,7 @@ router.get("/get/:productId", async (req, res) => {
 });
 
 // Delete a product by ID
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", verifyAdminToken, async (req, res) => {
   const { id } = req.params;
   try {
     await Product.findByIdAndDelete(id);
