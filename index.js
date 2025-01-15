@@ -182,7 +182,7 @@ app.get("/api/search", async (req, res) => {
     res.status(500).json({ message: "Error searching products", error });
   }
 });
-app.post("/api/verify-payment", async (req, res) => {
+app.post("/api/verify-payment", verifyUserToken, async (req, res) => {
   const { reference } = req.body;
   if (!reference) {
     return res
@@ -624,7 +624,7 @@ app.post("/api/send-otp", async (req, res) => {
     return res.status(500).json({ message: "Error sending OTP" });
   }
 });
-app.post("/api/sendUrgentDeliveryEmail", (req, res) => {
+app.post("/api/sendUrgentDeliveryEmail", verifyUserToken, (req, res) => {
   const orderData = req.body.orderData;
 
   // Set up the transporter using your email provider's SMTP
