@@ -3,6 +3,7 @@ const router = express.Router();
 const Product = require("../models/Product");
 const verifyAdminToken = require("../middleware/verifyAdminToken ");
 const verifyUserToken = require("../middleware/verifyUserToken");
+const verifyTokenForAdminOrUser = require("../middleware/verifyTokenForAdminOrUser");
 
 // Create a new product
 router.post("/", verifyAdminToken, async (req, res) => {
@@ -56,63 +57,67 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: "Error fetching products." });
   }
 });
-router.put("/updatequantity/:productId", verifyUserToken, async (req, res) => {
-  console.log(req.params.productId);
-  const { productId } = req.params;
-  const { size, quantity } = req.body;
+router.put(
+  "/updatequantity/:productId",
+  verifyTokenForAdminOrUser,
+  async (req, res) => {
+    console.log(req.params.productId);
+    const { productId } = req.params;
+    const { size, quantity } = req.body;
 
-  try {
-    const product = await Product.findById(productId);
+    try {
+      const product = await Product.findById(productId);
 
-    if (!product) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
-    }
+      if (!product) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Product not found" });
+      }
 
-    if (size) {
-      // Update size-specific quantity
-      if (product.sizeQuantities.has(size)) {
-        const currentQuantity = product.sizeQuantities.get(size);
+      if (size) {
+        // Update size-specific quantity
+        if (product.sizeQuantities.has(size)) {
+          const currentQuantity = product.sizeQuantities.get(size);
 
-        if (currentQuantity < quantity) {
+          if (currentQuantity < quantity) {
+            return res.status(400).json({
+              success: false,
+              message: "Insufficient stock for the selected size.",
+            });
+          }
+
+          product.sizeQuantities.set(size, currentQuantity - quantity);
+        } else {
           return res.status(400).json({
             success: false,
-            message: "Insufficient stock for the selected size.",
+            message: "Invalid size or size not available.",
+          });
+        }
+      } else {
+        // Update general quantity
+        if (product.quantity < quantity) {
+          return res.status(400).json({
+            success: false,
+            message: "Insufficient stock.",
           });
         }
 
-        product.sizeQuantities.set(size, currentQuantity - quantity);
-      } else {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid size or size not available.",
-        });
-      }
-    } else {
-      // Update general quantity
-      if (product.quantity < quantity) {
-        return res.status(400).json({
-          success: false,
-          message: "Insufficient stock.",
-        });
+        product.quantity -= quantity;
       }
 
-      product.quantity -= quantity;
+      await product.save();
+
+      res
+        .status(200)
+        .json({ success: true, message: "Product quantity updated", product });
+    } catch (error) {
+      console.error("Error updating quantity:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error", error });
     }
-
-    await product.save();
-
-    res
-      .status(200)
-      .json({ success: true, message: "Product quantity updated", product });
-  } catch (error) {
-    console.error("Error updating quantity:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Internal server error", error });
   }
-});
+);
 
 // Product search route (you can add this to your routes for searching products by number)
 router.get("/:productNumber", async (req, res) => {
