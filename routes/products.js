@@ -118,6 +118,44 @@ router.put(
     }
   }
 );
+// New route for admin to update product quantities
+router.put(
+  "/admin/updatequantity/:productId",
+  verifyAdminToken, // Middleware to verify admin access
+  async (req, res) => {
+    const { productId } = req.params;
+    const { size, quantity } = req.body;
+
+    try {
+      const product = await Product.findById(productId);
+
+      if (!product) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Product not found" });
+      }
+
+      if (size) {
+        // Update size-specific quantity
+        product.sizeQuantities.set(size, quantity);
+      } else {
+        // Update general quantity
+        product.quantity = quantity;
+      }
+
+      await product.save();
+
+      res
+        .status(200)
+        .json({ success: true, message: "Product quantity updated", product });
+    } catch (error) {
+      console.error("Error updating product quantity:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error", error });
+    }
+  }
+);
 
 // Product search route (you can add this to your routes for searching products by number)
 router.get("/:productNumber", async (req, res) => {
