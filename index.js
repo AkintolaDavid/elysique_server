@@ -641,25 +641,71 @@ app.post("/api/sendUrgentDeliveryEmail", verifyUserToken, (req, res) => {
     from: process.env.EMAIL_USER, // The sender's email
     to: "akintoladavid66@gmail.com", // Admin's email
     subject: "Urgent Delivery Request",
-    text: `An order has been placed with urgent delivery:
-
-      Order Date: ${orderData.orderDate}
-      Total Amount: ₦${orderData.totalAmount.toFixed(2)}
+    html: `
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f1f2f4;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fff; text-align: center; border-collapse: collapse; border-radius: 10px; overflow: hidden;">
       
-      Products:
-      ${orderData.products
-        .map((product) => `${product.name} (x${product.quantity})`)
-        .join("\n")}
-
-      Customer Details:
-      Name: ${orderData.customerName}
-      Address: ${orderData.house_address}, ${orderData.city}, ${
+      <!-- Header Section -->
+      <tr>
+        <td style="background-color: #252526; color: white; padding: 20px; font-size: 23px; font-weight: 600;">
+          Urgent Delivery Request
+        </td>
+      </tr>
+      
+      <!-- Body Section -->
+      <tr>
+        <td style="padding: 20px; font-size: 18px; font-weight: 700; color: #333; text-align: left;">
+          An order has been placed with urgent delivery:
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 10px 20px; font-size: 16px; font-weight: 600; color: #333; text-align: left;">
+          <strong>Order Date:</strong> ${orderData.orderDate}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 10px 20px; font-size: 16px; font-weight: 600; color: #333; text-align: left;">
+          <strong>Total Amount:</strong> ₦${orderData.totalAmount.toFixed(2)}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 10px 20px; font-size: 16px; font-weight: 600; color: #333; text-align: left;">
+          <strong>Products:</strong>
+          <ul style="margin: 0; padding-left: 20px; font-weight: 400;">
+            ${orderData.products
+              .map(
+                (product) => `<li>${product.name} (x${product.quantity})</li>`
+              )
+              .join("")}
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 10px 20px; font-size: 16px; font-weight: 600; color: #333; text-align: left;">
+          <strong>Customer Details:</strong>
+          <p style="margin: 5px 0; font-weight: 400;">
+            Name: ${orderData.customerName}<br />
+            Address: ${orderData.house_address}, ${orderData.city}, ${
       orderData.state
     }, ${orderData.country}
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 10px 20px; font-size: 16px; font-weight: 600; color: #333; text-align: left;">
+          <strong>Urgent Delivery:</strong> Yes
+        </td>
+      </tr>
 
-      Urgent Delivery: Yes
-
-      Please review the order and process it accordingly.`,
+      <!-- Footer Section -->
+      <tr>
+        <td style="padding: 15px 20px; font-size: 14px; color: #777; text-align: left; border-top: 1px solid #ddd;">
+          This email was generated automatically. Please review the order and process it accordingly.
+        </td>
+      </tr>
+    </table>
+  </div>
+  `,
   };
 
   // Send email
