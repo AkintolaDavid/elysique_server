@@ -57,67 +57,63 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: "Error fetching products." });
   }
 });
-router.put(
-  "/updatequantity/:productId",
-  verifyTokenForAdminOrUser,
-  async (req, res) => {
-    console.log(req.params.productId);
-    const { productId } = req.params;
-    const { size, quantity } = req.body;
+router.put("/updatequantity/:productId", verifyUserToken, async (req, res) => {
+  console.log(req.params.productId);
+  const { productId } = req.params;
+  const { size, quantity } = req.body;
 
-    try {
-      const product = await Product.findById(productId);
+  try {
+    const product = await Product.findById(productId);
 
-      if (!product) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Product not found" });
-      }
-
-      if (size) {
-        // Update size-specific quantity
-        if (product.sizeQuantities.has(size)) {
-          const currentQuantity = product.sizeQuantities.get(size);
-
-          if (currentQuantity < quantity) {
-            return res.status(400).json({
-              success: false,
-              message: "Insufficient stock for the selected size.",
-            });
-          }
-
-          product.sizeQuantities.set(size, currentQuantity - quantity);
-        } else {
-          return res.status(400).json({
-            success: false,
-            message: "Invalid size or size not available.",
-          });
-        }
-      } else {
-        // Update general quantity
-        if (product.quantity < quantity) {
-          return res.status(400).json({
-            success: false,
-            message: "Insufficient stock.",
-          });
-        }
-
-        product.quantity -= quantity;
-      }
-
-      await product.save();
-
-      res
-        .status(200)
-        .json({ success: true, message: "Product quantity updated", product });
-    } catch (error) {
-      console.error("Error updating quantity:", error);
-      res
-        .status(500)
-        .json({ success: false, message: "Internal server error", error });
+    if (!product) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
     }
+
+    if (size) {
+      // Update size-specific quantity
+      if (product.sizeQuantities.has(size)) {
+        const currentQuantity = product.sizeQuantities.get(size);
+
+        if (currentQuantity < quantity) {
+          return res.status(400).json({
+            success: false,
+            message: "Insufficient stock for the selected size.",
+          });
+        }
+
+        product.sizeQuantities.set(size, currentQuantity - quantity);
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid size or size not available.",
+        });
+      }
+    } else {
+      // Update general quantity
+      if (product.quantity < quantity) {
+        return res.status(400).json({
+          success: false,
+          message: "Insufficient stock.",
+        });
+      }
+
+      product.quantity -= quantity;
+    }
+
+    await product.save();
+
+    res
+      .status(200)
+      .json({ success: true, message: "Product quantity updated", product });
+  } catch (error) {
+    console.error("Error updating quantity:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Internal server error", error });
   }
-);
+});
 // New route for admin to update product quantities
 router.put(
   "/admin/updatequantity/:productId",
