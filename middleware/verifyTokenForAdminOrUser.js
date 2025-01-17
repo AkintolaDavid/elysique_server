@@ -1,29 +1,28 @@
 const jwt = require("jsonwebtoken");
 
-// Middleware to verify token and allow admin or user
 const verifyTokenForAdminOrUser = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1]; // Extract token from Bearer
+  const authHeader = req.headers.authorization;
 
-  if (!token) {
+  if (!authHeader) {
     return res
       .status(401)
-      .json({ message: "Access denied. No token provided." });
+      .json({ success: false, message: "No token provided" });
   }
 
-  try {
-    // Verify the token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  const token = authHeader.split(" ")[1]; // Extract the token
+  console.log("Received Token:", token); // Log the token to verify it
 
-    // Check if the role is admin or user
-    if (decoded.role === "admin" || decoded.role === "user") {
-      req.user = decoded; // Attach user data to request
-      next();
-    } else {
-      return res.status(403).json({ message: "Forbidden. Invalid role." });
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      console.error("Token verification failed:", err);
+      return res
+        .status(403)
+        .json({ success: false, message: "Token is not valid" });
     }
-  } catch (error) {
-    return res.status(401).json({ message: "Invalid or expired token." });
-  }
+
+    req.user = user;
+    next();
+  });
 };
 
 module.exports = verifyTokenForAdminOrUser;
