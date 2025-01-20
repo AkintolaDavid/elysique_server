@@ -117,7 +117,12 @@ app.post("/api/signup", async (req, res) => {
     });
 
     await newUser.save();
-
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: newUser._id, email: newUser.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
     res.status(201).json({
       message: "User registered successfully",
       token,
@@ -714,7 +719,6 @@ app.post("/api/sendUrgentDeliveryEmail", verifyUserToken, (req, res) => {
       console.error("Error sending email:", error);
       return res.status(500).send("Error sending email.");
     }
-    console.log("Email sent: " + info.response);
     res.status(200).send("Email sent successfully.");
   });
 });
